@@ -6,9 +6,11 @@ import (
 	"go/token"
 	"go/types"
 	"io"
+	"math/rand"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"golang.org/x/tools/go/analysis"
 	"honnef.co/go/tools/code"
@@ -878,6 +880,10 @@ func (g *Graph) node(ctx *context, obj interface{}) (node *Node, new bool) {
 			return onode, false
 		}
 
+		if key.name == "xxx" {
+			time.Sleep(time.Duration(rand.Intn(500)) * time.Millisecond)
+		}
+
 		node = g.newNode(ctx, obj)
 		g.Nodes.Store(obj, node)
 		g.objNodes.Store(key, node)
@@ -887,6 +893,10 @@ func (g *Graph) node(ctx *context, obj interface{}) (node *Node, new bool) {
 	node = g.newNode(ctx, obj)
 	g.Nodes.Store(obj, node)
 	return node, true
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }
 
 func (g *Graph) newNode(ctx *context, obj interface{}) *Node {

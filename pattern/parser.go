@@ -14,6 +14,10 @@ type Pattern struct {
 	Relevant []reflect.Type
 }
 
+func (p *Pattern) xxx() {}
+
+func xxx(err error) bool { return false }
+
 func MustParse(s string) Pattern {
 	p := &Parser{AllowTypeInfo: true}
 	pat, err := p.Parse(s)
@@ -157,6 +161,8 @@ type Parser struct {
 	last  *item
 	items chan item
 }
+
+func (p *Parser) xxx() {}
 
 func (p *Parser) Parse(s string) (Pattern, error) {
 	p.cur = item{}
