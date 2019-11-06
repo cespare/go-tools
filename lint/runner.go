@@ -81,7 +81,6 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
-	"log"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -664,10 +663,10 @@ func (r *Runner) Run(cfg *packages.Config, patterns []string, analyzers []*analy
 	for _, pkg := range allPkgs {
 		pkg := pkg
 		go func() {
-			if !strings.HasSuffix(pkg.PkgPath, ".test") {
-				time.Sleep(time.Second)
-			}
-			log.Println("DEBUG lint runner package:", pkg.PkgPath)
+			// if !strings.HasSuffix(pkg.PkgPath, ".test") {
+			// 	time.Sleep(5 * time.Second)
+			// }
+			// log.Println("DEBUG lint runner package:", pkg.PkgPath)
 			r.processPkg(pkg, analyzers)
 
 			if pkg.initial {

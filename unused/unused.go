@@ -1012,7 +1012,7 @@ func debugObj(obj interface{}) string {
 		return fmt.Sprintf("not types.Object (%T)", obj)
 	}
 	return fmt.Sprintf("Pos=%d Pkg=%s Name=%q Type=%s Exported=%t Id=%q",
-		o.Pos(), o.Pkg(), o.Name(), o.Type(), o.Exported(), o.Id())
+		o.Pos(), o.Pkg().Path(), o.Name(), o.Type(), o.Exported(), o.Id())
 }
 
 func (ctx *context) use(used, by interface{}, kind edgeKind) {
@@ -1083,6 +1083,7 @@ func (g *Graph) trackExportedIdentifier(ctx *context, obj types.Object) bool {
 
 func (g *Graph) entry(pkg *pkg) {
 	no := atomic.AddUint64(&g.nodeOffset, 1)
+	log.Printf("DEBUG entry %d: %s / %s", no, pkg.Pkg.Path(), pkg.Pkg.Name())
 	ctx := &context{
 		g:           g,
 		pkg:         pkg,
