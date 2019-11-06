@@ -1083,9 +1083,18 @@ func (g *Graph) trackExportedIdentifier(ctx *context, obj types.Object) bool {
 	return true
 }
 
+func isTestPkg(pkg *types.Package) bool {
+	for _, imp := range pkg.Imports() {
+		if imp.Path() == "testing" {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *Graph) entry(pkg *pkg) {
 	no := atomic.AddUint64(&g.nodeOffset, 1)
-	log.Printf("DEBUG entry %d: %s (%p)", no, pkg.Pkg, pkg)
+	log.Printf("DEBUG entry %d: %s test=%t (%p)", no, pkg.Pkg, isTestPkg(pkg.Pkg), pkg)
 	ctx := &context{
 		g:           g,
 		pkg:         pkg,

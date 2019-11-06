@@ -81,7 +81,6 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
-	"log"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -134,6 +133,8 @@ type Package struct {
 	// package itself has been processed. Once the value reaches zero,
 	// the package is no longer needed.
 	dependents uint64
+
+	isTest bool
 
 	*packages.Package
 	Imports []*Package
@@ -347,9 +348,9 @@ func (r *Runner) runAnalysis(ac *analysisAction) (ret interface{}, err error) {
 		}()
 
 		pass := new(analysis.Pass)
-		if strings.Contains(ac.pkg.ID, "fiber") {
-			log.Printf("%s: lint.Package=%p; analysis.Pass=%p", ac.pkg.ID, ac.pkg, pass)
-		}
+		// if strings.Contains(ac.pkg.ID, "fiber") {
+		// 	log.Printf("%s: lint.Package=%p; analysis.Pass=%p", ac.pkg.ID, ac.pkg, pass)
+		// }
 		*pass = analysis.Pass{
 			Analyzer: ac.analyzer,
 			Fset:     ac.pkg.Fset,
@@ -623,6 +624,7 @@ func (r *Runner) Run(cfg *packages.Config, patterns []string, analyzers []*analy
 	packages.Visit(initialPkgs, nil, func(l *packages.Package) {
 		p := &Package{
 			Package:  l,
+			isTest:   strings.HasSuffix(l.ID, ".test]"),
 			results:  make([]*result, len(r.analyzerIDs.m)),
 			facts:    make([]map[types.Object][]analysis.Fact, len(r.analyzerIDs.m)),
 			pkgFacts: make([][]analysis.Fact, len(r.analyzerIDs.m)),
@@ -631,9 +633,9 @@ func (r *Runner) Run(cfg *packages.Config, patterns []string, analyzers []*analy
 			dependents:    1,
 			canClearTypes: !hasCumulative,
 		}
-		if strings.Contains(l.ID, "fiber") {
-			log.Printf("%s: package.Package=%p, lint.Package=%p", l.ID, l, p)
-		}
+		// if strings.Contains(l.ID, "fiber") {
+		// 	log.Printf("%s: package.Package=%p, lint.Package=%p", l.ID, l, p)
+		// }
 		m[l] = p
 		allPkgs = append(allPkgs, m[l])
 		for i := range m[l].facts {
@@ -671,6 +673,11 @@ func (r *Runner) Run(cfg *packages.Config, patterns []string, analyzers []*analy
 	for _, pkg := range allPkgs {
 		pkg := pkg
 		go func() {
+			// if strings.Contains(pkg.ID, "fiber") && !strings.HasSuffix(pkg.ID, ".test]") {
+			// 	log.Println(pkg.ID, "sleep start")
+			// 	time.Sleep(3 * time.Second)
+			// 	log.Println(pkg.ID, "sleep end")
+			// }
 			r.processPkg(pkg, analyzers)
 
 			if pkg.initial {

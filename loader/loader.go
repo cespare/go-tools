@@ -10,6 +10,7 @@ import (
 	"go/types"
 	"log"
 	"os"
+	"strings"
 
 	"golang.org/x/tools/go/gcexportdata"
 	"golang.org/x/tools/go/packages"
@@ -27,8 +28,23 @@ func Graph(cfg packages.Config, patterns ...string) ([]*packages.Package, error)
 	if err != nil {
 		return nil, err
 	}
+	testFound := false
 	for _, pkg := range pkgs {
 		log.Println("DEBUG Graph pkg:", pkg.PkgPath)
+		if pkg.PkgPath == patterns[0] {
+			if strings.HasSuffix(pkg.ID, ".test]") {
+				testFound = true
+			} else {
+				if testFound {
+					log.Println("DEBUG test loaded before main package")
+				} else {
+					log.Println("DEBUG main package loaded before test")
+				}
+			}
+		}
+	}
+	if !testFound {
+		panic("no test found")
 	}
 	fset := token.NewFileSet()
 	packages.Visit(pkgs, nil, func(pkg *packages.Package) {
@@ -85,6 +101,9 @@ func LoadFromExport(pkg *packages.Package) error {
 // LoadFromSource loads a package from source. All of its dependencies
 // must have been loaded already.
 func LoadFromSource(pkg *packages.Package) error {
+	if strings.Contains(pkg.ID, "fiber") {
+		log.Printf("DEBUG LoadFromSource: %s", pkg.ID)
+	}
 	pkg.IllTyped = true
 	pkg.Types = types.NewPackage(pkg.PkgPath, pkg.Name)
 
