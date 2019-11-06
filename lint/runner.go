@@ -81,6 +81,7 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"log"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -675,7 +676,7 @@ func (r *Runner) Run(cfg *packages.Config, patterns []string, analyzers []*analy
 		go func() {
 			// if strings.Contains(pkg.ID, "fiber") && !strings.HasSuffix(pkg.ID, ".test]") {
 			// 	log.Println(pkg.ID, "sleep start")
-			// 	time.Sleep(3 * time.Second)
+			// time.Sleep(3 * time.Second)
 			// 	log.Println(pkg.ID, "sleep end")
 			// }
 			r.processPkg(pkg, analyzers)
@@ -839,6 +840,9 @@ func (err analysisError) Error() string {
 // either from export data or from source. For packages loaded from
 // source, the provides analyzers will be run on the package.
 func (r *Runner) processPkg(pkg *Package, analyzers []*analysis.Analyzer) {
+	if strings.Contains(pkg.ID, "fiber") {
+		log.Printf("DEBUG processPkg: %s", pkg.ID)
+	}
 	defer func() {
 		// Clear information we no longer need. Make sure to do this
 		// when returning from processPkg so that we clear
