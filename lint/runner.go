@@ -81,6 +81,7 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"log"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -346,6 +347,9 @@ func (r *Runner) runAnalysis(ac *analysisAction) (ret interface{}, err error) {
 		}()
 
 		pass := new(analysis.Pass)
+		if strings.Contains(ac.pkg.ID, "fiber") {
+			log.Printf("%s: lint.Package=%p; analysis.Pass=%p", ac.pkg.ID, ac.pkg, pass)
+		}
 		*pass = analysis.Pass{
 			Analyzer: ac.analyzer,
 			Fset:     ac.pkg.Fset,
@@ -617,7 +621,7 @@ func (r *Runner) Run(cfg *packages.Config, patterns []string, analyzers []*analy
 	var allPkgs []*Package
 	m := map[*packages.Package]*Package{}
 	packages.Visit(initialPkgs, nil, func(l *packages.Package) {
-		m[l] = &Package{
+		p := &Package{
 			Package:  l,
 			results:  make([]*result, len(r.analyzerIDs.m)),
 			facts:    make([]map[types.Object][]analysis.Fact, len(r.analyzerIDs.m)),
@@ -627,6 +631,10 @@ func (r *Runner) Run(cfg *packages.Config, patterns []string, analyzers []*analy
 			dependents:    1,
 			canClearTypes: !hasCumulative,
 		}
+		if strings.Contains(l.ID, "fiber") {
+			log.Printf("%s: package.Package=%p, lint.Package=%p", l.ID, l, p)
+		}
+		m[l] = p
 		allPkgs = append(allPkgs, m[l])
 		for i := range m[l].facts {
 			m[l].facts[i] = map[types.Object][]analysis.Fact{}
@@ -663,10 +671,6 @@ func (r *Runner) Run(cfg *packages.Config, patterns []string, analyzers []*analy
 	for _, pkg := range allPkgs {
 		pkg := pkg
 		go func() {
-			// if !strings.HasSuffix(pkg.PkgPath, ".test") {
-			// 	time.Sleep(5 * time.Second)
-			// }
-			// log.Println("DEBUG lint runner package:", pkg.PkgPath)
 			r.processPkg(pkg, analyzers)
 
 			if pkg.initial {

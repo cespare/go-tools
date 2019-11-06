@@ -489,6 +489,8 @@ func (c *Checker) Run(pass *analysis.Pass) (interface{}, error) {
 		SrcFuncs:   irpkg.SrcFuncs,
 	}
 
+	log.Printf("%s: analysis.Pass=%p; unused.pkg=%p", pass.Pkg.Name(), pass, pkg)
+
 	c.processPkg(c.graph, pkg)
 
 	return nil, nil
@@ -1083,7 +1085,7 @@ func (g *Graph) trackExportedIdentifier(ctx *context, obj types.Object) bool {
 
 func (g *Graph) entry(pkg *pkg) {
 	no := atomic.AddUint64(&g.nodeOffset, 1)
-	log.Printf("DEBUG entry %d: %s / %s", no, pkg.Pkg.Path(), pkg.Pkg.Name())
+	log.Printf("DEBUG entry %d: %s (%p)", no, pkg.Pkg, pkg)
 	ctx := &context{
 		g:           g,
 		pkg:         pkg,

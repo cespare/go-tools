@@ -21,10 +21,14 @@ import (
 //
 // The provided config can set any setting with the exception of Mode.
 func Graph(cfg packages.Config, patterns ...string) ([]*packages.Package, error) {
+	log.Printf("DEBUG packages.Config: %+v", cfg)
 	cfg.Mode = packages.NeedName | packages.NeedImports | packages.NeedDeps | packages.NeedExportsFile | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedTypesSizes
 	pkgs, err := packages.Load(&cfg, patterns...)
 	if err != nil {
 		return nil, err
+	}
+	for _, pkg := range pkgs {
+		log.Println("DEBUG Graph pkg:", pkg.PkgPath)
 	}
 	fset := token.NewFileSet()
 	packages.Visit(pkgs, nil, func(pkg *packages.Package) {
