@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"go/types"
 	"io"
+	"log"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -788,6 +789,9 @@ type Graph struct {
 	// need synchronisation
 	mu        sync.Mutex
 	TypeNodes typeutil.Map
+
+	debugMu    sync.Mutex
+	debugNames map[string]interface{}
 }
 
 type context struct {
@@ -802,7 +806,7 @@ type context struct {
 }
 
 func NewGraph() *Graph {
-	g := &Graph{}
+	g := &Graph{debugNames: make(map[string]interface{})}
 	g.Root = g.newNode(&context{}, nil)
 	return g
 }
@@ -983,8 +987,32 @@ func (ctx *context) see(obj interface{}) *Node {
 
 	assert(obj != nil)
 	// add new node to graph
-	node, _ := ctx.g.node(ctx, obj)
+
+	node, new := ctx.g.node(ctx, obj)
+
+	_, isFunc := obj.(*types.Func)
+	if new && isFunc {
+		debugName := fmt.Sprintf("(%T) %s", obj, obj)
+		ctx.g.debugMu.Lock()
+		if prev, ok := ctx.g.debugNames[debugName]; ok {
+			log.Printf("XXX: DUPLICATE for %s", debugName)
+			log.Printf("previous:\n%s", debugObj(prev))
+			log.Printf("new:\n%s", debugObj(obj))
+		}
+		ctx.g.debugNames[debugName] = obj
+		ctx.g.debugMu.Unlock()
+	}
+
 	return node
+}
+
+func debugObj(obj interface{}) string {
+	o, ok := obj.(types.Object)
+	if !ok {
+		return fmt.Sprintf("not types.Object (%T)", obj)
+	}
+	return fmt.Sprintf("Pos=%d Pkg=%s Name=%q Type=%s Exported=%t Id=%q",
+		o.Pos(), o.Pkg(), o.Name(), o.Type(), o.Exported(), o.Id())
 }
 
 func (ctx *context) use(used, by interface{}, kind edgeKind) {
