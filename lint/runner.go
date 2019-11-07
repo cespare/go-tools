@@ -81,7 +81,6 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
-	"log"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -674,10 +673,9 @@ func (r *Runner) Run(cfg *packages.Config, patterns []string, analyzers []*analy
 	for _, pkg := range allPkgs {
 		pkg := pkg
 		go func() {
-			// if strings.Contains(pkg.ID, "fiber") && !strings.HasSuffix(pkg.ID, ".test]") {
-			// 	log.Println(pkg.ID, "sleep start")
-			// time.Sleep(3 * time.Second)
-			// 	log.Println(pkg.ID, "sleep end")
+			// if pkg.ID == "liftoff/ops/graphite/fiber" {
+			// 	log.Println("DEBUG sleeping")
+			// 	time.Sleep(8 * time.Second)
 			// }
 			r.processPkg(pkg, analyzers)
 
@@ -840,9 +838,9 @@ func (err analysisError) Error() string {
 // either from export data or from source. For packages loaded from
 // source, the provides analyzers will be run on the package.
 func (r *Runner) processPkg(pkg *Package, analyzers []*analysis.Analyzer) {
-	if strings.Contains(pkg.ID, "fiber") {
-		log.Printf("DEBUG processPkg: %s", pkg.ID)
-	}
+	// if strings.Contains(pkg.ID, "fiber") {
+	// 	log.Printf("DEBUG processPkg: %s", pkg.ID)
+	// }
 	defer func() {
 		// Clear information we no longer need. Make sure to do this
 		// when returning from processPkg so that we clear
@@ -867,6 +865,13 @@ func (r *Runner) processPkg(pkg *Package, analyzers []*analysis.Analyzer) {
 	}
 
 	for _, imp := range pkg.Imports {
+		// if strings.Contains(pkg.ID, "fiber") {
+		// 	select {
+		// 	case <-imp.done:
+		// 	default:
+		// 		log.Printf("DEBUG %s is waiting on imp.done for %s", pkg.ID, imp.ID)
+		// 	}
+		// }
 		<-imp.done
 		if len(imp.errs) > 0 {
 			if imp.initial {

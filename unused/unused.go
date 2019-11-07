@@ -1256,6 +1256,10 @@ func (g *Graph) entry(pkg *pkg) {
 			switch n := n.(type) {
 			case *ast.FuncDecl:
 				fn = pkg.TypesInfo.ObjectOf(n.Name).(*types.Func)
+				name := fn.FullName()
+				if strings.Contains(name, "isShutdownErr") {
+					log.Printf("DEBUG FuncDecl %s (%p) %v", name, fn, objNodeKeyFor(g.fset, fn))
+				}
 				fns = append(fns, fn)
 				ctx.see(fn)
 			case *ast.GenDecl:
